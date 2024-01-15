@@ -3,6 +3,9 @@ import axios from "../api/axios";
 import useAuth from "../hooks/useAuth";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { useNavigate } from "react-router-dom";
+import Create from "./Create";
+import useLogout from "../hooks/useLogout";
+import DeleteCompleted from "./DeleteCompleted";
 
 const url = 'task/';
 const Home = () => {
@@ -11,6 +14,8 @@ const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
     const { auth } = useAuth();
     const axiosPrivate = useAxiosPrivate();
+    const [refresh, setRefresh] = useState(false);
+    const logout = useLogout();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -40,6 +45,28 @@ const Home = () => {
         }
     }, [])
 
+    useEffect(() => {
+        const getData = async () => {
+            try {
+                const response = await axiosPrivate.get(`${url}${auth.username}`, {
+                    headers: {
+                        Authorization: auth.accessToken,
+                    }
+                });
+                if (response?.status === 200) {
+                    setTasks(response?.data);
+                    setIsLoading(false);
+                }
+            } catch (error) {
+                if (error?.response?.status === 401) {
+                    navigate('/login');
+                }
+            }
+        };
+
+        getData();
+    }, [refresh])
+
     const changeStatus = async (e, taskId) => {
         const newStatus = e.target.checked ? 'completed' : 'pending';
         try {
@@ -52,10 +79,12 @@ const Home = () => {
             });
 
             if (response?.data?.status === 200) {
-                if (e.target.checked) {
+                if (newStatus === 'completed') {
                     document.querySelector(`#label${taskId}`).classList.add('completed');
+                    e.target.checked = true;
                 } else {
                     document.querySelector(`#label${taskId}`).classList.remove('completed');
+                    e.target.checked = false;
                 }
             }
 
@@ -72,20 +101,17 @@ const Home = () => {
             : (
                 <>
                     <h1>My Tasks</h1>
-                    <form>
-                        <div style={{display:'flex', justifyContent: 'center', alignItems: 'center', marginTop: '10px'}}>
-                            <input type="text" name="newTask" />
-                            <input type="submit" value="Create" style={{ width: '25%' }} />
-                        </div>
-                    </form>
+                    <Create setTasks={setTasks} />
                     <ul className="lists">
                         {tasks.map(task => (
                             <li key={task._id}>
                                 <label htmlFor="status" id={`label${task._id}`} className={task.status === 'completed' ? 'completed' : ''}>{task.task}</label>
-                                <input type="checkbox" name="status" onChange={e => changeStatus(e, task._id)} />
+                                <input type="checkbox" name="status" checked={task.status === 'completed' ? true : false} onChange={e => changeStatus(e, task._id)} />
                             </li>
                         ))}
                     </ul>
+                    <DeleteCompleted setRefresh={setRefresh} />
+                    <button onClick={e => logout()}>Logout</button>
                 </>
             )
     )

@@ -71,7 +71,7 @@ input[type="password"] {
     font-size: 20px;
 }
 
-input[type="submit"] {
+input[type="submit"], button {
     border: none;
     border-radius: 5px;
     background-color: #6495ed;
@@ -85,7 +85,7 @@ input[type="submit"] {
     font-size: 14px;
 }
 
-input[type="submit"]:hover {
+input[type="submit"]:hover, button:hover {
     cursor: pointer;
     background-color: #103486;
 }
@@ -115,6 +115,8 @@ input[type="submit"]:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding-top: 3px;
+    padding-bottom: 3px;
 }
 
 .completed{
